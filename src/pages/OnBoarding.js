@@ -1,14 +1,17 @@
+import React, { useState } from "react";
 import Nav from "../components/Nav";
-import { useState } from "react";
+import axios from "axios";
 import { useCookies } from "react-cookie";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { Skeleton } from "@mui/material";
 
 const OnBoarding = () => {
   const [cookies, setCookie, removeCookie] = useCookies(null);
   const [formData, setFormData] = useState({
     user_id: cookies.UserId,
     first_name: "",
+    branch: "",
+    current_year: "",
     dob_day: "",
     dob_month: "",
     dob_year: "",
@@ -20,11 +23,14 @@ const OnBoarding = () => {
     matches: [],
   });
 
-  let navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
-    console.log("submitted");
     e.preventDefault();
+    setLoading(true);
+
     try {
       const response = await axios.put("http://localhost:8000/user", {
         formData,
@@ -34,11 +40,12 @@ const OnBoarding = () => {
       if (success) navigate("/dashboard");
     } catch (err) {
       console.log(err);
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleChange = (e) => {
-    console.log("e", e);
     const value =
       e.target.type === "checkbox" ? e.target.checked : e.target.value;
     const name = e.target.name;
@@ -63,14 +70,34 @@ const OnBoarding = () => {
               id="first_name"
               type="text"
               name="first_name"
-              placeholder="First Name"
+              placeholder="Name"
               required={true}
               value={formData.first_name}
               onChange={handleChange}
             />
+            <label htmlFor="branch">Branch</label>
+            <input
+              id="branch"
+              type="text"
+              name="branch"
+              placeholder="Branch"
+              required={true}
+              value={formData.branch}
+              onChange={handleChange}
+            />
+            <label htmlFor="current_year">Current Year</label>
+            <input
+              id="current_year"
+              type="text"
+              name="current_year"
+              placeholder="Year"
+              required={true}
+              value={formData.current_year}
+              onChange={handleChange}
+            />
 
             <label>Birthday</label>
-            <div className="multiple-input-container">
+            <div className="dob">
               <input
                 id="dob_day"
                 type="number"
@@ -199,8 +226,15 @@ const OnBoarding = () => {
               required={true}
             />
             <div className="photo-container">
-              {formData.url && (
+              {formData.url && !loading ? (
                 <img src={formData.url} alt="profile pic preview" />
+              ) : (
+                <Skeleton
+                  variant="rectangular"
+                  width="100%"
+                  height={200}
+                  animation="wave"
+                />
               )}
             </div>
           </section>
@@ -209,4 +243,5 @@ const OnBoarding = () => {
     </>
   );
 };
+
 export default OnBoarding;

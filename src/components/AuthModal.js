@@ -22,6 +22,11 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
     e.preventDefault();
 
     try {
+      // if (!email.endsWith("@rajagiri.edu.in")) {
+      //   setError("Please use a valid email ending with @rajagiri.edu.in");
+      //   return;
+      // }
+
       if (isSignUp && password !== confirmPassword) {
         setError("Passwords need to match!");
         return;

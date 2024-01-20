@@ -85,12 +85,16 @@ app.post("/login", async (req, res) => {
 app.get("/gendered-users", async (req, res) => {
   const client = new MongoClient(uri);
   const gender = req.query.gender;
+
   try {
     await client.connect();
     const database = client.db("app-data");
     const users = database.collection("users");
+
     const query = { gender_identity: { $eq: gender } };
-    const foundUsers = await users.find(query).toArray();
+    const sortCondition = { _id: 1 }; // -1 for descending order (latest first)
+    const foundUsers = await users.find(query).sort(sortCondition).toArray();
+
     res.send(foundUsers);
   } finally {
     await client.close();
@@ -126,6 +130,9 @@ app.put("/user", async (req, res) => {
     const updateDocument = {
       $set: {
         first_name: formData.first_name,
+        // age: 2024 - formData.dob_year,
+        branch: formData.branch,
+        current_year: formData.current_year,
         dob_day: formData.dob_day,
         dob_month: formData.dob_month,
         dob_year: formData.dob_year,

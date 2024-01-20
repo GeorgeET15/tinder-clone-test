@@ -148,6 +148,9 @@ nav .logo-container .logo {
   width: 35%;
   text-align: start;
 }
+.dob {
+  font-size: 15px;
+}
 
 .onboarding form input {
   padding: 15px 30px;
@@ -208,7 +211,14 @@ nav .logo-container .logo {
   width: 100%;
 }
 
+@media (max-width: 768px) {
+  .dob {
+    width: 300px;
+  }
+}
+
 /*-------- Dashboard  --------*/
+/* Centering the card within the screen */
 .dashboard {
   display: flex;
   justify-content: space-between;
@@ -233,21 +243,75 @@ nav .logo-container .logo {
 }
 
 .card {
+  position: relative; /* Add this line to make the positioning relative to the card */
   width: 400px;
   height: 650px;
   border-radius: 30px;
   background-size: cover;
   background-position: center;
+  margin-top: -50px;
 }
 
 .card h3 {
   margin-top: 0;
+  position: absolute; /* Add this line to use absolute positioning */
+  bottom: 0; /* Align to the bottom */
+  left: 0; /* Align to the left */
+  padding: 10px; /* Optional padding for better readability */
+  background: rgba(
+    0,
+    0,
+    0,
+    0.7
+  ); /* Optional background color for better readability */
+  color: white; /* Optional text color for better readability */
+}
+
+.show-matches-button {
+  color: rgb(255, 255, 255);
+  text-transform: uppercase;
+  font-size: 15px;
+  background: linear-gradient(45deg, rgb(254, 48, 114), rgb(255, 89, 64));
+  padding: 12px 30px;
+  border-radius: 30px;
+  border: none;
+  position: fixed;
+  bottom: 20px; /* Adjust this value to control the distance from the bottom */
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.show-info-button {
+  padding: 12px 30px;
+  position: fixed;
+  bottom: 100px; /* Adjust this value to control the distance from the bottom */
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .dashboard .swipe-info {
   position: absolute;
   bottom: 0;
   padding: 10px;
+}
+
+@media (max-width: 768px) {
+  .dashboard {
+    display: flex;
+    justify-content: center; /* Center the .swipe-container horizontally */
+    align-items: center; /* Center the .swipe-container vertically */
+    height: 100vh;
+  }
+
+  .dashboard .card-container {
+    width: 300px;
+    height: 550px;
+  }
+
+  .card {
+    width: 300px;
+    height: 550px;
+  }
 }
 
 /*-------- Chat Container --------*/
@@ -301,6 +365,12 @@ nav .logo-container .logo {
   width: 100%;
 }
 
+@media (max-width: 768px) {
+  .chat-container {
+    width: auto;
+  }
+}
+
 /*-------- Chat Display --------*/
 .chat-display,
 .matches-display {
@@ -323,8 +393,6 @@ textarea {
 }
 
 /*-------- Chat --------*/
-
-/* Add your styles for the chat here */
 
 .chat-display {
   overflow-y: auto;
