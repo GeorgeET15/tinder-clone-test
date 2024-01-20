@@ -11,9 +11,7 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Skeleton,
   Button,
-  Avatar,
 } from "@mui/material";
 import Typography from "@mui/material/Typography";
 
