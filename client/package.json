@@ -17,7 +17,7 @@
     "react-tinder-card": "^1.6.4"
   },
   "scripts": {
-    "start:frontend": "react-scripts start",
+    "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
