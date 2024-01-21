@@ -9,7 +9,7 @@ const uri = process.env.URI;
 const app = express();
 const cors = require("cors");
 const corsOptions = {
-  origin: "*", // Allow requests from any origin
+  origin: "https://tinder-clone-test-sand.vercel.app/", // Allow requests from any origin
   credentials: true, // Access-Control-Allow-Credentials: true
   optionSuccessStatus: 200,
 };
