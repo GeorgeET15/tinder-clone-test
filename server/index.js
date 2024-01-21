@@ -20,8 +20,8 @@ app.use((req, res, next) => {
 
 const cors = require("cors");
 const corsOptions = {
-  origin: "https://tinder-clone-test-sand.vercel.app", // Remove the trailing slash
-  credentials: true,
+  origin: "*", // Allow requests from any origin
+  credentials: true, // Access-Control-Allow-Credentials: true
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
@@ -34,6 +34,10 @@ const client = new MongoClient(uri);
 
 app.get("/", (req, res) => {
   res.json("Hello to my app");
+});
+
+app.get("/test", (req, res) => {
+  res.json("test");
 });
 
 app.post("/signup", async (req, res) => {
