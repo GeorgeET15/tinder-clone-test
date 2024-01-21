@@ -12,7 +12,7 @@ const MatchesDisplay = ({ matches, setClickedUser }) => {
   const getMatches = async () => {
     try {
       const response = await axios.get(
-        "http://tinder-clone-test-a0p4.onrender.com/users",
+        "https://tinder-clone-test-a0p4.onrender.com/users",
         {
           params: { userId: JSON.stringify(matchedUserIds) },
         }

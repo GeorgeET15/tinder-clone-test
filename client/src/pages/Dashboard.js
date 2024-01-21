@@ -29,7 +29,7 @@ const Dashboard = () => {
   const getUser = async () => {
     try {
       const response = await axios.get(
-        "http://tinder-clone-test-a0p4.onrender.com/user",
+        "https://tinder-clone-test-a0p4.onrender.com/user",
         {
           params: { userId },
         }
@@ -45,7 +45,7 @@ const Dashboard = () => {
   const getGenderedUsers = async () => {
     try {
       const response = await axios.get(
-        "http://tinder-clone-test-a0p4.onrender.com/gendered-users",
+        "https://tinder-clone-test-a0p4.onrender.com/gendered-users",
         {
           params: { gender: user?.gender_interest },
         }
@@ -68,7 +68,7 @@ const Dashboard = () => {
 
   const updateMatches = async (matchedUserId) => {
     try {
-      await axios.put("http://tinder-clone-test-a0p4.onrender.com/addmatch", {
+      await axios.put("https://tinder-clone-test-a0p4.onrender.com/addmatch", {
         userId,
         matchedUserId,
       });

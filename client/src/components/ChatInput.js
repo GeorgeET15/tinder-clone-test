@@ -20,7 +20,7 @@ const ChatInput = ({
     };
 
     try {
-      await axios.post("http://tinder-clone-test-a0p4.onrender.com/message", {
+      await axios.post("https://tinder-clone-test-a0p4.onrender.com/message", {
         message,
       });
       getUserMessages();
