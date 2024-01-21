@@ -8,6 +8,9 @@ require("dotenv").config();
 const uri = process.env.URI;
 const app = express();
 
+// Connection pooling setup
+const client = new MongoClient(uri, { poolSize: 10, useNewUrlParser: true });
+
 app.use((req, res, next) => {
   res.header(
     "Access-Control-Allow-Origin",
@@ -27,11 +30,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Rest of your server code
-
-// Create a single MongoClient instance and reuse it
-const client = new MongoClient(uri);
-
 app.get("/", (req, res) => {
   res.json("Hello to my app");
 });
@@ -41,7 +39,6 @@ app.get("/test", (req, res) => {
 });
 
 app.post("/signup", async (req, res) => {
-  const client = new MongoClient(uri);
   const { email, password } = req.body;
 
   const generatedUserId = uuidv4();
@@ -73,14 +70,14 @@ app.post("/signup", async (req, res) => {
     });
     res.status(201).json({ token, userId: generatedUserId });
   } catch (err) {
-    console.log(err);
+    console.error(err);
+    res.status(500).send("Internal Server Error");
   } finally {
     await client.close();
   }
 });
 
 app.post("/login", async (req, res) => {
-  const client = new MongoClient(uri);
   const { email, password } = req.body;
 
   try {
@@ -96,10 +93,14 @@ app.post("/login", async (req, res) => {
     if (user && correctPassword) {
       const token = jwt.sign(user, email, { expiresIn: 60 * 24 });
       res.status(201).json({ token, userId: user.user_id });
+    } else {
+      res.status(400).send("Invalid Credentials");
     }
-    res.status(400).send("Invalid Credentials");
   } catch (error) {
-    console.log(error);
+    console.error(error);
+    res.status(500).send("Internal Server Error");
+  } finally {
+    await client.close();
   }
 });
 
