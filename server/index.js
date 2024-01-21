@@ -3,12 +3,17 @@ const express = require("express");
 const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
-const cors = require("cors");
 const bcrypt = require("bcryptjs");
 require("dotenv").config();
 const uri = process.env.URI;
 const app = express();
-app.use(cors());
+const cors = require("cors");
+const corsOptions = {
+  origin: "http://localhost:3000",
+  credentials: true, //access-control-allow-credentials:true
+  optionSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Create a single MongoClient instance and reuse it

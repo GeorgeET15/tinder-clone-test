@@ -11,9 +11,12 @@ const ChatDisplay = ({ user, clickedUser }) => {
 
   const getUsersMessages = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/messages", {
-        params: { userId: userId, correspondingUserId: clickedUserId },
-      });
+      const response = await axios.get(
+        "http://tinder-clone-test-a0p4.onrender.com/messages",
+        {
+          params: { userId: userId, correspondingUserId: clickedUserId },
+        }
+      );
       setUsersMessages(response.data);
     } catch (error) {
       console.log(error);
@@ -22,9 +25,12 @@ const ChatDisplay = ({ user, clickedUser }) => {
 
   const getClickedUsersMessages = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/messages", {
-        params: { userId: clickedUserId, correspondingUserId: userId },
-      });
+      const response = await axios.get(
+        "http://tinder-clone-test-a0p4.onrender.com/messages",
+        {
+          params: { userId: clickedUserId, correspondingUserId: userId },
+        }
+      );
       setClickedUsersMessages(response.data);
     } catch (error) {
       console.log(error);

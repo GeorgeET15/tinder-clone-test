@@ -19,9 +19,12 @@ const Profile = () => {
 
   const getUser = async () => {
     try {
-      const response = await axios.get("http://localhost:8000/user", {
-        params: { userId },
-      });
+      const response = await axios.get(
+        "http://tinder-clone-test-a0p4.onrender.com/user",
+        {
+          params: { userId },
+        }
+      );
       setUser(response.data);
     } catch (error) {
       console.log(error);
