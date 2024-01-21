@@ -9,8 +9,8 @@ const uri = process.env.URI;
 const app = express();
 const cors = require("cors");
 const corsOptions = {
-  origin: "http://localhost:3000",
-  credentials: true, //access-control-allow-credentials:true
+  origin: "*", // Allow requests from any origin
+  credentials: true, // Access-Control-Allow-Credentials: true
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
