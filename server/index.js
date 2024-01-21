@@ -7,14 +7,27 @@ const bcrypt = require("bcryptjs");
 require("dotenv").config();
 const uri = process.env.URI;
 const app = express();
+
+app.use((req, res, next) => {
+  res.header(
+    "Access-Control-Allow-Origin",
+    "https://tinder-clone-test-sand.vercel.app"
+  );
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE");
+  res.header("Access-Control-Allow-Headers", "Content-Type");
+  next();
+});
+
 const cors = require("cors");
 const corsOptions = {
-  origin: "*", // Allow requests from any origin
-  credentials: true, // Access-Control-Allow-Credentials: true
+  origin: "https://tinder-clone-test-sand.vercel.app", // Remove the trailing slash
+  credentials: true,
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 app.use(express.json());
+
+// Rest of your server code
 
 // Create a single MongoClient instance and reuse it
 const client = new MongoClient(uri);
