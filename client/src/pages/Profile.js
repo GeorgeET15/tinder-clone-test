@@ -50,7 +50,7 @@ const Profile = () => {
         maxWidth: 400,
         margin: "auto",
         marginTop: 4,
-        backgroundColor: "#f0f0f0",
+        backgroundColor: "#ffff",
       }}
     >
       <CardContent
@@ -122,7 +122,7 @@ const Profile = () => {
         ) : (
           <Typography
             sx={{
-              backgroundColor: "olivedrab",
+              backgroundColor: "lightblue",
               padding: 2,
               borderRadius: 8,
               opacity: 0.8,

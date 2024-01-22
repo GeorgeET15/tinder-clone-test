@@ -2,6 +2,8 @@ import { useState } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { useCookies } from "react-cookie";
+import Backdrop from "@mui/material/Backdrop";
+import CircularProgress from "@mui/material/CircularProgress";
 
 const AuthModal = ({ setShowModal, isSignUp }) => {
   const [email, setEmail] = useState(null);
@@ -9,6 +11,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
   const [confirmPassword, setConfirmPassword] = useState(null);
   const [error, setError] = useState(null);
   const [cookies, setCookie, removeCookie] = useCookies(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   let navigate = useNavigate();
 
@@ -20,7 +23,7 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+    setIsSubmitting(true);
     try {
       // if (!email.endsWith("@rajagiri.edu.in")) {
       //   setError("Please use a valid email ending with @rajagiri.edu.in");
@@ -90,7 +93,22 @@ const AuthModal = ({ setShowModal, isSignUp }) => {
             onChange={(e) => setConfirmPassword(e.target.value)}
           />
         )}
-        <input className="secondary-button" type="submit" />
+        <div>
+          <input
+            type="submit"
+            className={`secondary-button ${isSubmitting && "disabled"}`}
+            disabled={isSubmitting}
+          />
+
+          {isSubmitting && (
+            <Backdrop
+              sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+              open={isSubmitting}
+            >
+              <CircularProgress color="inherit" />
+            </Backdrop>
+          )}
+        </div>
         <p>{error}</p>
       </form>
 
