@@ -144,6 +144,7 @@ app.put("/user", async (req, res) => {
     const updateDocument = {
       $set: {
         first_name: formData.first_name,
+        last_name: formData.last_name,
         // age: 2024 - formData.dob_year,
         branch: formData.branch,
         current_year: formData.current_year,
