@@ -198,32 +198,15 @@ app.post("/remove-match", async (req, res) => {
     await client.connect();
     const database = client.db("app-data");
     const users = database.collection("users");
-    const messages = database.collection("messages");
 
-    // Step 1: Remove the match from the user's matches
-    const matchQuery = { user_id: userId };
-    const matchUpdateDocument = {
+    const query = { user_id: userId };
+    const updateDocument = {
       $pull: { matches: { user_id: matchUserId } },
     };
-    await users.updateOne(matchQuery, matchUpdateDocument);
 
-    // Step 2: Remove the match from the other user's matches
-    const reverseMatchQuery = { user_id: matchUserId };
-    const reverseMatchUpdateDocument = {
-      $pull: { matches: { user_id: userId } },
-    };
-    await users.updateOne(reverseMatchQuery, reverseMatchUpdateDocument);
+    const updatedUser = await users.updateOne(query, updateDocument);
 
-    // Step 3: Delete all messages between the two users
-    const messageQuery = {
-      $or: [
-        { from_userId: userId, to_userId: matchUserId },
-        { from_userId: matchUserId, to_userId: userId },
-      ],
-    };
-    await messages.deleteMany(messageQuery);
-
-    res.json({ success: true });
+    res.json({ success: true, updatedUser });
   } catch (error) {
     console.error("Error removing match:", error);
     res.status(500).json({ success: false, error: "Internal Server Error" });
