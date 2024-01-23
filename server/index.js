@@ -33,6 +33,10 @@ app.get("/", (req, res) => {
   res.json("Hello to my app");
 });
 
+app.get("/test", (req, res) => {
+  res.json("test");
+});
+
 app.post("/signup", async (req, res) => {
   const client = new MongoClient(uri);
   const { email, password } = req.body;
@@ -286,34 +290,6 @@ app.post("/message", async (req, res) => {
 
     const insertedMessage = await messages.insertOne(message);
     res.send(insertedMessage);
-  } finally {
-    await client.close();
-  }
-});
-
-app.delete("/delete-user", async (req, res) => {
-  const client = new MongoClient(uri);
-  const userIdToDelete = req.body.userId; // Assuming you send the userId to delete in the request body
-
-  try {
-    await client.connect();
-    const database = client.db("app-data");
-    const users = database.collection("users");
-
-    // Step 1: Delete the user
-    const deletionQuery = { user_id: userIdToDelete };
-    await users.deleteOne(deletionQuery);
-
-    // Step 2: Delete all messages sent or received by the user
-    const messagesQuery = {
-      $or: [{ from_userId: userIdToDelete }, { to_userId: userIdToDelete }],
-    };
-    await messages.deleteMany(messagesQuery);
-
-    res.json({ success: true });
-  } catch (error) {
-    console.error("Error deleting user:", error);
-    res.status(500).json({ success: false, error: "Internal Server Error" });
   } finally {
     await client.close();
   }
