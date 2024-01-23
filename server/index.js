@@ -4,9 +4,14 @@ const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const http = require("http");
+const socketIo = require("socket.io");
 require("dotenv").config();
+
 const uri = process.env.URI;
 const app = express();
+const server = http.createServer(app);
+const io = socketIo(server);
 
 app.use((req, res, next) => {
   res.header(
@@ -20,14 +25,23 @@ app.use((req, res, next) => {
 
 const cors = require("cors");
 const corsOptions = {
-  origin: "*", // Allow requests from any origin
-  credentials: true, // Access-Control-Allow-Credentials: true
+  origin: "*",
+  credentials: true,
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 app.use(express.json());
 
-const client = new MongoClient(uri);
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  // Example: Emit a welcome message to the connected client
+  socket.emit("message", { text: "Welcome to the server!" });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
 
 app.get("/", (req, res) => {
   res.json("Hello to my app");
@@ -97,6 +111,8 @@ app.post("/login", async (req, res) => {
     res.status(400).send("Invalid Credentials");
   } catch (error) {
     console.log(error);
+  } finally {
+    await client.close();
   }
 });
 
@@ -148,7 +164,6 @@ app.put("/user", async (req, res) => {
     const updateDocument = {
       $set: {
         first_name: formData.first_name,
-        // age: 2024 - formData.dob_year,
         branch: formData.branch,
         current_year: formData.current_year,
         dob_day: formData.dob_day,
@@ -295,4 +310,24 @@ app.post("/message", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log("Server running on PORT " + PORT));
+const connectToMongoDB = async () => {
+  const client = new MongoClient(uri, { useUnifiedTopology: true });
+  await client.connect();
+  const database = client.db("app-data");
+  const collection = database.collection("messages");
+
+  const changeStream = collection.watch();
+
+  changeStream.on("change", (change) => {
+    if (change.operationType === "insert") {
+      const newMessage = change.fullDocument;
+      io.emit("message", newMessage);
+    }
+  });
+};
+
+connectToMongoDB();
+
+server.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
+});
