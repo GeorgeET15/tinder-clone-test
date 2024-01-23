@@ -27,9 +27,6 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Rest of your server code
-
-// Create a single MongoClient instance and reuse it
 const client = new MongoClient(uri);
 
 app.get("/", (req, res) => {
@@ -193,6 +190,31 @@ app.put("/addmatch", async (req, res) => {
   }
 });
 
+app.post("/remove-match", async (req, res) => {
+  const client = new MongoClient(uri);
+  const { userId, matchUserId } = req.body;
+
+  try {
+    await client.connect();
+    const database = client.db("app-data");
+    const users = database.collection("users");
+
+    const query = { user_id: userId };
+    const updateDocument = {
+      $pull: { matches: { user_id: matchUserId } },
+    };
+
+    const updatedUser = await users.updateOne(query, updateDocument);
+
+    res.json({ success: true, updatedUser });
+  } catch (error) {
+    console.error("Error removing match:", error);
+    res.status(500).json({ success: false, error: "Internal Server Error" });
+  } finally {
+    await client.close();
+  }
+});
+
 app.get("/users", async (req, res) => {
   const client = new MongoClient(uri);
   const userId = JSON.parse(req.query.userId);
@@ -240,7 +262,6 @@ app.get("/messages", async (req, res) => {
   }
 });
 
-// Add a Message to our Database
 app.post("/message", async (req, res) => {
   const client = new MongoClient(uri);
   const message = req.body.message;
