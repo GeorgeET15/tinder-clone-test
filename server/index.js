@@ -4,9 +4,14 @@ const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
+const http = require("http");
+const socketIO = require("socket.io");
 require("dotenv").config();
+
 const uri = process.env.URI;
 const app = express();
+const server = http.createServer(app);
+const io = socketIO(server);
 
 app.use((req, res, next) => {
   res.header(
@@ -20,14 +25,12 @@ app.use((req, res, next) => {
 
 const cors = require("cors");
 const corsOptions = {
-  origin: "*", // Allow requests from any origin
-  credentials: true, // Access-Control-Allow-Credentials: true
+  origin: "*",
+  credentials: true,
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
 app.use(express.json());
-
-const client = new MongoClient(uri);
 
 app.get("/", (req, res) => {
   res.json("Hello to my app");
@@ -266,11 +269,20 @@ app.get("/messages", async (req, res) => {
     const messages = database.collection("messages");
 
     const query = {
-      from_userId: userId,
-      to_userId: correspondingUserId,
+      $or: [
+        { from_userId: userId, to_userId: correspondingUserId },
+        { from_userId: correspondingUserId, to_userId: userId },
+      ],
     };
+
     const foundMessages = await messages.find(query).toArray();
-    res.send(foundMessages);
+
+    // Instead of sending a response, emit messages to the corresponding clients
+    io.to(userId).emit("previousMessages", foundMessages);
+    io.to(correspondingUserId).emit("previousMessages", foundMessages);
+
+    // Respond with success
+    res.json({ success: true });
   } finally {
     await client.close();
   }
@@ -286,7 +298,13 @@ app.post("/message", async (req, res) => {
     const messages = database.collection("messages");
 
     const insertedMessage = await messages.insertOne(message);
-    res.send(insertedMessage);
+
+    // Broadcast the new message to the corresponding clients
+    io.to(message.from_userId).emit("chatMessage", message);
+    io.to(message.to_userId).emit("chatMessage", message);
+
+    // Respond with success
+    res.json({ success: true });
   } finally {
     await client.close();
   }
@@ -320,4 +338,18 @@ app.delete("/delete-user", async (req, res) => {
   }
 });
 
-app.listen(PORT, () => console.log("Server running on PORT " + PORT));
+server.listen(PORT, () => console.log("Server running on PORT " + PORT));
+
+io.on("connection", (socket) => {
+  console.log("A user connected");
+
+  // Load previous messages when a user connects
+  socket.on("loadMessages", async (userId, correspondingUserId) => {
+    // Emit the previous messages directly to the requesting client
+    socket.emit("loadMessages", userId, correspondingUserId);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("User disconnected");
+  });
+});
