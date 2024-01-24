@@ -4,14 +4,9 @@ const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const { Server } = require("socket.io");
-const http = require("http"); // Import the 'http' module
 require("dotenv").config();
-
 const uri = process.env.URI;
 const app = express();
-const server = http.createServer(app); // Create HTTP server
-const io = new Server(server); // Attach Socket.IO to the server
 
 app.use((req, res, next) => {
   res.header(
@@ -25,8 +20,8 @@ app.use((req, res, next) => {
 
 const cors = require("cors");
 const corsOptions = {
-  origin: "*",
-  credentials: true,
+  origin: "*", // Allow requests from any origin
+  credentials: true, // Access-Control-Allow-Credentials: true
   optionSuccessStatus: 200,
 };
 app.use(cors(corsOptions));
@@ -111,7 +106,7 @@ app.get("/gendered-users", async (req, res) => {
     const users = database.collection("users");
 
     const query = { gender_identity: { $eq: gender } };
-    const sortCondition = { _id: 1 };
+    const sortCondition = { _id: 1 }; // -1 for descending order (latest first)
     const foundUsers = await users.find(query).sort(sortCondition).toArray();
 
     res.send(foundUsers);
@@ -150,6 +145,7 @@ app.put("/user", async (req, res) => {
       $set: {
         first_name: formData.first_name,
         last_name: formData.last_name,
+        // age: 2024 - formData.dob_year,
         branch: formData.branch,
         current_year: formData.current_year,
         dob_day: formData.dob_day,
@@ -201,18 +197,21 @@ app.post("/remove-match", async (req, res) => {
     const users = database.collection("users");
     const messages = database.collection("messages");
 
+    // Step 1: Remove the match from the user's matches
     const matchQuery = { user_id: userId };
     const matchUpdateDocument = {
       $pull: { matches: { user_id: matchUserId } },
     };
     await users.updateOne(matchQuery, matchUpdateDocument);
 
+    // Step 2: Remove the match from the other user's matches
     const reverseMatchQuery = { user_id: matchUserId };
     const reverseMatchUpdateDocument = {
       $pull: { matches: { user_id: userId } },
     };
     await users.updateOne(reverseMatchQuery, reverseMatchUpdateDocument);
 
+    // Step 3: Delete all messages between the two users
     const messageQuery = {
       $or: [
         { from_userId: userId, to_userId: matchUserId },
@@ -267,12 +266,9 @@ app.get("/messages", async (req, res) => {
     const messages = database.collection("messages");
 
     const query = {
-      $or: [
-        { from_userId: userId, to_userId: correspondingUserId },
-        { from_userId: correspondingUserId, to_userId: userId },
-      ],
+      from_userId: userId,
+      to_userId: correspondingUserId,
     };
-
     const foundMessages = await messages.find(query).toArray();
     res.send(foundMessages);
   } finally {
@@ -280,41 +276,36 @@ app.get("/messages", async (req, res) => {
   }
 });
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
+app.post("/message", async (req, res) => {
+  const client = new MongoClient(uri);
+  const message = req.body.message;
 
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
+  try {
+    await client.connect();
+    const database = client.db("app-data");
+    const messages = database.collection("messages");
 
-  socket.on("message", async (message) => {
-    const client = new MongoClient(uri);
-
-    try {
-      await client.connect();
-      const database = client.db("app-data");
-      const messages = database.collection("messages");
-
-      const insertedMessage = await messages.insertOne(message);
-      io.emit("message", message);
-    } finally {
-      await client.close();
-    }
-  });
+    const insertedMessage = await messages.insertOne(message);
+    res.send(insertedMessage);
+  } finally {
+    await client.close();
+  }
 });
 
 app.delete("/delete-user", async (req, res) => {
   const client = new MongoClient(uri);
-  const userIdToDelete = req.body.userId;
+  const userIdToDelete = req.body.userId; // Assuming you send the userId to delete in the request body
 
   try {
     await client.connect();
     const database = client.db("app-data");
     const users = database.collection("users");
 
+    // Step 1: Delete the user
     const deletionQuery = { user_id: userIdToDelete };
     await users.deleteOne(deletionQuery);
 
+    // Step 2: Delete all messages sent or received by the user
     const messagesQuery = {
       $or: [{ from_userId: userIdToDelete }, { to_userId: userIdToDelete }],
     };
@@ -329,6 +320,4 @@ app.delete("/delete-user", async (req, res) => {
   }
 });
 
-server.listen(PORT, () => {
-  console.log("Server running on PORT " + PORT);
-});
+app.listen(PORT, () => console.log("Server running on PORT " + PORT));
