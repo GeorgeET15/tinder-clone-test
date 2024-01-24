@@ -4,14 +4,9 @@ const { MongoClient } = require("mongodb");
 const { v4: uuidv4 } = require("uuid");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-const socketio = require("socket.io");
-const http = require("http");
 require("dotenv").config();
-
 const uri = process.env.URI;
 const app = express();
-const server = http.createServer(app);
-const io = socketio(server);
 
 app.use((req, res, next) => {
   res.header(
@@ -98,8 +93,6 @@ app.post("/login", async (req, res) => {
     res.status(400).send("Invalid Credentials");
   } catch (error) {
     console.log(error);
-  } finally {
-    await client.close();
   }
 });
 
@@ -113,7 +106,7 @@ app.get("/gendered-users", async (req, res) => {
     const users = database.collection("users");
 
     const query = { gender_identity: { $eq: gender } };
-    const sortCondition = { _id: 1 };
+    const sortCondition = { _id: 1 }; // -1 for descending order (latest first)
     const foundUsers = await users.find(query).sort(sortCondition).toArray();
 
     res.send(foundUsers);
@@ -152,6 +145,7 @@ app.put("/user", async (req, res) => {
       $set: {
         first_name: formData.first_name,
         last_name: formData.last_name,
+        // age: 2024 - formData.dob_year,
         branch: formData.branch,
         current_year: formData.current_year,
         dob_day: formData.dob_day,
@@ -203,18 +197,21 @@ app.post("/remove-match", async (req, res) => {
     const users = database.collection("users");
     const messages = database.collection("messages");
 
+    // Step 1: Remove the match from the user's matches
     const matchQuery = { user_id: userId };
     const matchUpdateDocument = {
       $pull: { matches: { user_id: matchUserId } },
     };
     await users.updateOne(matchQuery, matchUpdateDocument);
 
+    // Step 2: Remove the match from the other user's matches
     const reverseMatchQuery = { user_id: matchUserId };
     const reverseMatchUpdateDocument = {
       $pull: { matches: { user_id: userId } },
     };
     await users.updateOne(reverseMatchQuery, reverseMatchUpdateDocument);
 
+    // Step 3: Delete all messages between the two users
     const messageQuery = {
       $or: [
         { from_userId: userId, to_userId: matchUserId },
@@ -297,16 +294,18 @@ app.post("/message", async (req, res) => {
 
 app.delete("/delete-user", async (req, res) => {
   const client = new MongoClient(uri);
-  const userIdToDelete = req.body.userId;
+  const userIdToDelete = req.body.userId; // Assuming you send the userId to delete in the request body
 
   try {
     await client.connect();
     const database = client.db("app-data");
     const users = database.collection("users");
 
+    // Step 1: Delete the user
     const deletionQuery = { user_id: userIdToDelete };
     await users.deleteOne(deletionQuery);
 
+    // Step 2: Delete all messages sent or received by the user
     const messagesQuery = {
       $or: [{ from_userId: userIdToDelete }, { to_userId: userIdToDelete }],
     };
@@ -321,41 +320,4 @@ app.delete("/delete-user", async (req, res) => {
   }
 });
 
-io.on("connection", (socket) => {
-  console.log("A user connected");
-
-  socket.on("chatMessage", async ({ userId, correspondingUserId, message }) => {
-    try {
-      const client = new MongoClient(uri);
-      await client.connect();
-
-      const database = client.db("app-data");
-      const messages = database.collection("messages");
-
-      const newMessage = {
-        from_userId: userId,
-        to_userId: correspondingUserId,
-        content: message,
-        timestamp: new Date(),
-      };
-
-      await messages.insertOne(newMessage);
-
-      io.to(socket.id).emit("messageSent", newMessage);
-      const correspondingSocket = io.sockets.connected[correspondingUserId];
-      if (correspondingSocket) {
-        io.to(correspondingSocket.id).emit("messageReceived", newMessage);
-      }
-    } catch (error) {
-      console.error("Error sending message:", error);
-    } finally {
-      await client.close();
-    }
-  });
-
-  socket.on("disconnect", () => {
-    console.log("User disconnected");
-  });
-});
-
-server.listen(PORT, () => console.log("Server running on PORT " + PORT));
+app.listen(PORT, () => console.log("Server running on PORT " + PORT));
