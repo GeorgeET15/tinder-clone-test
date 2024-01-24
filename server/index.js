@@ -25,7 +25,7 @@ app.use((req, res, next) => {
 
 const cors = require("cors");
 const corsOptions = {
-  origin: "https://tinder-clone-test-sand.vercel.app",
+  origin: "*",
   credentials: true,
   optionSuccessStatus: 200,
 };
